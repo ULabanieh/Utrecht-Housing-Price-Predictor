@@ -1,3 +1,6 @@
+# 🚧 Project Status: In Progress
+---
+
 # Project Overview
 
 The goal of this project is to build a machine learning model that predicts housing prices in Utrecht based on individual property characteristics. Using a publicly available dataset of approximately 2,000 housing listings, the project explores how features such as living area, lot size, number of bathrooms, construction year, energy efficiency, and property amenities relate to housing prices.
