@@ -175,7 +175,7 @@ To enhance clarity and reduce visual clutter, the following refinements were app
 - A centered figure title was added to provide context for the entire grid
 - Individual subplot titles were cleaned and labeled with human-readable feature names and appropriate units (m² for area measurements, € for monetary values)
 
-![image.png](attachment:49a0655b-e15b-4697-bcec-f31422fa50c4:image.png)
+<img width="1589" height="1014" alt="image" src="https://github.com/user-attachments/assets/da2d5893-9394-4a3c-8cd1-bf253d9888c6" />
 
 ### Interpretation
 
@@ -201,7 +201,7 @@ The boxplots reveal several important characteristics of the dataset:
 2. **Build Year:** This variable displays a symmetric distribution with no outliers, spanning from 1920 to 2018. The balanced temporal representation confirms that the dataset includes properties from multiple construction eras without bias toward any particular time period.
 3. **Tax Value and Retail Value:** Both valuation features show a concentration of properties in the €500k-€750k range, with a distinct cluster of high-value outliers between €1.1M-€1.5M. These represent the premium property segment in Utrecht's housing market. Notably, retail values consistently exceed tax values across all quartiles, which aligns with economic expectations.
 
-![image.png](attachment:7d7672fa-f13f-4c12-aed8-92d02fd5aca4:image.png)
+<img width="1589" height="1014" alt="image" src="https://github.com/user-attachments/assets/17711963-792d-49a2-8101-781ca8e1a8a9" />
 
 **Outlier Treatment Decision:**
 
@@ -231,7 +231,7 @@ A correlation heatmap was generated to examine linear relationships between nume
 
 **Tax Value ↔ Other Features**: Tax value shows similar correlation patterns to retail value (strong with house area, moderate with lot area), reinforcing that tax assessments are based on similar physical property characteristics.
 
-![image.png](attachment:6ba80fc6-543b-4d80-964a-bef8e61b02b7:image.png)
+<img width="903" height="790" alt="image" src="https://github.com/user-attachments/assets/a2628eb3-ac03-4fa7-bea6-92282ed51e20" />
 
 ### Implications for Modeling:
 
@@ -292,7 +292,7 @@ Skewness was quantified using the skewness coefficient:
 
 This substantial reduction in skewness confirms that log transformation is an appropriate preprocessing step for linear and neural network models in this project.
 
-![image.png](attachment:859f063f-acc8-4eba-bbf6-8fec68b248a8:image.png)
+<img width="1386" height="515" alt="image" src="https://github.com/user-attachments/assets/9d3df172-a529-4f47-b56e-9326e5448ee8" />
 
 ---
 
