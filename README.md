@@ -132,7 +132,7 @@ To enhance clarity and reduce visual clutter, the following refinements were app
 - A centered figure title was added to provide context for the entire grid
 - Individual subplot titles were cleaned and labeled with human-readable feature names and appropriate units (m² for area measurements, € for monetary values)
 
-![image.png](attachment:49a0655b-e15b-4697-bcec-f31422fa50c4:image.png)
+<img width="1589" height="1014" alt="image" src="https://github.com/user-attachments/assets/86955edf-6ebe-45f6-86aa-e6fd23b7f895" />
 
 ### Interpretation
 
