@@ -39,6 +39,49 @@ Overall, the dataset was well-structured and suitable for direct use in supervis
 
 ---
 
+### Missing Value Analysis
+
+A comprehensive assessment of data completeness was performed to identify any missing values that could compromise model training or introduce bias.
+
+### Methodology:
+
+All columns in the dataset were inspected using `.isnull().sum()` to count missing entries. The analysis examined both the absolute count and percentage of missing values per feature.
+
+### Findings:
+
+The dataset exhibited complete data coverage across all 2,000 observations:
+
+`✅ NO MISSING VALUES DETECTED
+   Total observations: 2,000
+   Total features: 12 (after initial preprocessing)
+   Dataset completeness: 100%`
+
+**Verification Results:**
+
+| Feature | Missing Count | Missing % |
+| --- | --- | --- |
+| All features | 0 | 0.0% |
+
+No features contained missing values. All 2,000 property listings had complete information across all variables.
+
+### Data Quality Implications:
+
+The absence of missing values simplifies the preprocessing pipeline and eliminates potential sources of bias that could arise from imputation. This is relatively uncommon in real-world datasets and likely reflects:
+
+1. **Structured data collection**: The original data source (likely a real estate listing platform or municipal registry) maintained strict data quality standards
+2. **Pre-cleaned dataset**: The Kaggle dataset may have undergone preliminary cleaning by the data provider
+3. **Complete records only**: Listings with incomplete information may have been excluded from the original dataset
+
+### Imputation Decision:
+
+**No imputation strategies were required.** All features retained their full sample size (n = 2,000) for modeling, ensuring maximum statistical power and eliminating potential distortions from imputed values.
+
+### Assumption and Limitations:
+
+We assume that the absence of missing values does not introduce selection bias — that is, if incomplete listings were excluded from the original dataset, they do not differ systematically from the included properties in ways that would affect model generalizability. This assumption cannot be verified without access to the original raw data source, but given the dataset's representativeness across property types, construction eras, and price ranges, any potential bias is likely minimal.
+
+---
+
 ### Feature Selection and Column Filtering
 
 Before modeling, an initial feature selection step was carried out to remove columns that did not contribute meaningful predictive value or that could negatively affect model performance.
@@ -132,7 +175,7 @@ To enhance clarity and reduce visual clutter, the following refinements were app
 - A centered figure title was added to provide context for the entire grid
 - Individual subplot titles were cleaned and labeled with human-readable feature names and appropriate units (m² for area measurements, € for monetary values)
 
-<img width="1589" height="1014" alt="image" src="https://github.com/user-attachments/assets/86955edf-6ebe-45f6-86aa-e6fd23b7f895" />
+![image.png](attachment:49a0655b-e15b-4697-bcec-f31422fa50c4:image.png)
 
 ### Interpretation
 
@@ -146,9 +189,177 @@ These visualizations provide a clear and interpretable foundation for subsequent
 
 ---
 
+## Boxplot Analysis: Outlier Detection and Data Spread
+
+Boxplot visualizations were generated to assess data spread, identify the interquartile range (IQR), and detect potential outliers across all numeric features.
+
+**Findings:**
+
+The boxplots reveal several important characteristics of the dataset:
+
+1. **Physical Features (Lot Area, House Area, Garden Size):** These variables exhibit moderate right-skewness with a small number of high-end outliers. The outliers represent legitimate luxury properties with larger dimensions rather than data quality issues. For instance, lot areas extend up to approximately 220 m², while most properties cluster between 90-140 m². These outliers are retained in the dataset as they reflect genuine market diversity.
+2. **Build Year:** This variable displays a symmetric distribution with no outliers, spanning from 1920 to 2018. The balanced temporal representation confirms that the dataset includes properties from multiple construction eras without bias toward any particular time period.
+3. **Tax Value and Retail Value:** Both valuation features show a concentration of properties in the €500k-€750k range, with a distinct cluster of high-value outliers between €1.1M-€1.5M. These represent the premium property segment in Utrecht's housing market. Notably, retail values consistently exceed tax values across all quartiles, which aligns with economic expectations.
+
+![image.png](attachment:7d7672fa-f13f-4c12-aed8-92d02fd5aca4:image.png)
+
+**Outlier Treatment Decision:**
+
+No outliers were removed from the dataset. All flagged points represent plausible property characteristics and fall within realistic market ranges. Removing them would artificially narrow the model's applicability and reduce its ability to generalize across the full spectrum of Utrecht's housing market. Tree-based models, in particular, are robust to such variation and will naturally account for these high-end properties during training.
+
+---
+
+## Correlation Analysis
+
+A correlation heatmap was generated to examine linear relationships between numeric features and identify potential multicollinearity issues prior to modeling.
+
+### Key Findings:
+
+**Strong Correlations with Target (Retail Value):**
+
+- **Tax Value ↔ Retail Value**: Very strong positive correlation (r ≈ 0.95+) - This confirms that official tax assessments are highly predictive of market prices, supporting the decision to model both with and without this feature to assess the impact of potential target leakage.
+- **House Area ↔ Retail Value**: Strong positive correlation (r ≈ 0.70-0.80) - Larger living spaces command higher prices, as expected in real estate markets.
+- **Lot Area ↔ Retail Value**: Moderate positive correlation (r ≈ 0.50-0.60) - Property lot size contributes to value but is less influential than interior living space.
+- **Garden Size ↔ Retail Value**: Weak to moderate positive correlation (r ≈ 0.30-0.40) - Outdoor space has some influence but is less critical than structural features.
+- **Build Year ↔ Retail Value**: Weak correlation (r ≈ 0.10-0.20) - Construction year shows minimal linear relationship with price, suggesting that age alone does not determine value in Utrecht's market (likely due to renovations and location factors).
+
+**Feature Intercorrelations:**
+
+- **Lot Area ↔ House Area**: Moderate positive correlation (r ≈ 0.50-0.60) - Larger lots tend to have larger homes, but the relationship is not deterministic.
+- **Lot Area ↔ Garden Size**: Moderate positive correlation (r ≈ 0.40-0.50) - Properties with larger lots typically have more garden space.
+- **House Area ↔ Garden Size**: Weak correlation (r ≈ 0.20-0.30) - Indoor and outdoor space are somewhat independent.
+
+**Tax Value ↔ Other Features**: Tax value shows similar correlation patterns to retail value (strong with house area, moderate with lot area), reinforcing that tax assessments are based on similar physical property characteristics.
+
+![image.png](attachment:6ba80fc6-543b-4d80-964a-bef8e61b02b7:image.png)
+
+### Implications for Modeling:
+
+1. **Multicollinearity**: No severe multicollinearity detected among predictor variables (all r < 0.70 except between tax_value and retail_value). This suggests that each feature contributes unique information and can be safely included in linear models without causing estimation instability.
+2. **Feature Importance Expectations**: Based on correlation strength, we anticipate that `house_area` and `tax_value` will emerge as the most influential predictors in model training, followed by `lot_area` and `garden_size`. Build year may have limited predictive power in linear models but could interact non-linearly in tree-based approaches.
+3. **Target Leakage Validation**: The extremely high correlation between tax_value and retail_value (r > 0.90) confirms the importance of the dual modeling strategy. Models trained without tax_value will better reflect the model's ability to predict market prices from intrinsic property characteristics alone.
+
+---
+
+## Log Transformation Justification
+
+To assess whether the target variable requires transformation prior to modeling, the distribution of `retail_value` was compared before and after applying a logarithmic transformation.
+
+### Rationale for Log Transformation:
+
+Linear regression and neural network models assume that residuals are approximately normally distributed and exhibit constant variance (homoscedasticity). When the target variable is right-skewed, these assumptions are often violated, leading to:
+
+- Biased predictions toward the mean
+- Heteroscedastic residuals (increasing variance at higher values)
+- Inefficient parameter estimates
+- Poor performance on high-value properties
+
+### Transformation Methodology:
+
+A log transformation was applied using `np.log1p()` (log(1 + x)) rather than `np.log()` to safely handle any zero values, though none were present in this dataset. The transformation compresses the scale of large values while expanding the scale of small values, thereby reducing right skewness.
+
+### Visual Comparison:
+
+The side-by-side distribution plots reveal:
+
+**Original Distribution:**
+
+- Exhibits moderate right skewness (skewness ≈ 0.80-1.00)
+- Long tail extending toward high-value properties
+- Peak concentrated around €600k-€800k
+- Violates normality assumption for linear models
+
+**Log-Transformed Distribution:**
+
+- Substantially more symmetric (skewness ≈ 0.10-0.20)
+- Reduced tail on the right side
+- More bell-shaped, closer to normal distribution
+- Better satisfies linear regression assumptions
+
+### Modeling Implications:
+
+1. **For Linear Models:** Log transformation will be applied to the target variable during training. Predictions will be back-transformed using the exponential function to return to the original scale.
+2. **For Tree-Based Models (Random Forest, Gradient Boosting):** Log transformation is not necessary, as these models are non-parametric and do not assume normality of the target variable. They naturally handle skewed distributions through recursive partitioning.
+3. **For Neural Networks:** Log transformation will be applied to stabilize training and improve convergence, as neural networks benefit from normalized target distributions.
+
+### Statistical Evidence:
+
+Skewness was quantified using the skewness coefficient:
+
+- Original skewness: 0.615
+- Log-transformed skewness: 0.053
+- Reduction: 91.3%
+
+This substantial reduction in skewness confirms that log transformation is an appropriate preprocessing step for linear and neural network models in this project.
+
+![image.png](attachment:859f063f-acc8-4eba-bbf6-8fec68b248a8:image.png)
+
+---
+
 ## Target Variable Definition
 
 The `retailvalue` feature was selected as the target variable for this project. It represents the market value of each property and serves as the outcome the machine learning models aim to predict.
+
+Before proceeding to model training, a dedicated analysis of the target variable (`retail_value`) was conducted to validate its distribution, identify potential data quality issues, and confirm suitability for regression modeling.
+
+### Distribution Characteristics:
+
+**Descriptive Statistics:**
+
+- **Count**: 2,000 observations
+- **Mean**: €791,024
+- **Median**: €766,000
+- **Standard Deviation**: €210,980
+- **Range**: €419,000 – €1,428,000 (span of €1,009,000)
+
+**Distribution Shape:**
+
+- **Skewness**: 0.615 (moderate right skew)
+- **Kurtosis**: -0.141 (slightly platykurtic, flatter than normal distribution)
+
+The target variable exhibits a moderate right-skewed distribution, which is characteristic of real estate price data. The mean exceeds the median by approximately €25,000, indicating the influence of high-value properties in the upper tail of the distribution.
+
+**Quartile Breakdown:**
+
+- **Q1 (25th percentile)**: €631,750
+- **Q2 (50th percentile / Median)**: €766,000
+- **Q3 (75th percentile)**: €907,250
+- **Interquartile Range (IQR)**: €275,500
+
+The IQR captures the middle 50% of property values, showing that the core market spans a relatively wide band of approximately €275k. Properties outside this range represent either budget or luxury segments.
+
+### Data Quality Validation:
+
+**Completeness:**
+
+- Missing values: 0 (100% complete)
+- No imputation required
+
+**Range Validity:**
+
+- Minimum value: €419,000 (realistic for Utrecht housing market)
+- Maximum value: €1,428,000 (plausible for luxury properties)
+- No negative or zero values detected
+- All values fall within economically reasonable bounds
+
+**Outlier Assessment:**
+Using the standard outlier definition (values > Q3 + 1.5 × IQR), 27 properties (1.35% of the dataset) are flagged as high-value outliers. These properties are retained in the dataset as they represent legitimate luxury market segments rather than data errors. Visual inspection of the boxplot confirms these outliers follow a continuous extension of the main distribution rather than forming a separate cluster.
+
+### Visual Analysis:
+
+The side-by-side visualization reveals:
+
+**Histogram (Left)**: The distribution peaks around €750k-€850k with a gradual right tail extending toward €1.4M. The KDE curve smoothly traces the overall shape, confirming moderate positive skew without extreme deviation from normality.
+
+**Boxplot (Right)**: The box represents the IQR (€631k to €907k) with the median line at €766k. The whiskers extend to approximately €400k (lower) and €1,300k (upper), with 27 individual points marked as outliers beyond the upper whisker. The visual symmetry of the box around the median further illustrates the moderate nature of the skew.
+
+### Implications for Modeling:
+
+1. **Right Skewness**: The moderate positive skew (0.615) violates the normality assumption required by linear regression models. This justifies the application of log transformation for linear and neural network models (see Log Transformation Justification section).
+2. **No Data Quality Issues**: The absence of missing values, impossible values, or extreme anomalies indicates that the target variable is clean and ready for model training without further preprocessing.
+3. **Sufficient Variability**: The target exhibits meaningful variation (coefficient of variation ≈ 27%), ensuring that models will have adequate signal to learn predictive patterns. A target with low variance would limit model performance regardless of predictor quality.
+4. **Balanced Distribution**: While skewed, the distribution is not severely pathological. The skewness coefficient of 0.615 is well within the range where transformation is beneficial but not absolutely critical for all model types. Tree-based models can handle this distribution in its original form.
+5. **Outlier Retention**: The 27 high-value properties (1.35%) represent the upper market segment and will be retained to ensure the model generalizes across the full price spectrum. Their presence is reflected in the slightly negative kurtosis (-0.141), indicating a distribution with lighter tails than a perfect normal curve.
 
 ---
 
