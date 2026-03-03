@@ -107,7 +107,7 @@ memory usage: 250.1 KB
 
 ### Step 1.6: Statistical Summary
 ```python
-df.describe()
+df[['lot_area', 'house_area', 'garden_size', 'build_year', 'tax_value', 'retail_value']].describe()
 ```
 
 **What this does:**
@@ -118,6 +118,18 @@ df.describe()
 - Are min/max values reasonable?
 - Is the scale consistent across features?
 - Are there extreme outliers?
+
+**Output:**
+	lot_area	house_area	garden_size	build_year	tax_value	retail_value
+count	2,000	2,000	2,000	2,000	2,000	2,000
+mean	115	140	35	1,969	651,715	791,024
+std	34	42	24	26	182,927	210,980
+min	50	68	5	1,920	310,000	419,000
+25%	89	111	14	1,947	521,000	631,750
+50%	110	135	32	1,969	633,000	766,000
+75%	138	166	53	1,992	759,250	907,250
+max	216	248	116	2,018	1,162,000	1,428,000
+
 
 ---
 
