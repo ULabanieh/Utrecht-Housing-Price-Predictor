@@ -1,10 +1,5 @@
 # Utrecht Housing Price Prediction
 
-![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
-![scikit-learn](https://img.shields.io/badge/scikit--learn-1.0+-orange.svg)
-![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-
 **A comprehensive machine learning comparison study for predicting residential property prices in Utrecht, Netherlands**
 
 ---
