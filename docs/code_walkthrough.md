@@ -133,6 +133,9 @@ df.duplicated().sum()
 
 **Why it matters:** Duplicate data can bias model training.
 
+**Output:**
+0
+
 ---
 
 ### Step 2.2: Check for Missing Values
