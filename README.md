@@ -243,7 +243,7 @@ Bathrooms:     ▌                                  0.01%
 - [ ] Confidence intervals (quantile regression)
 
 ### Phase 2: Major Enhancements (Expected 43% improvement)
-- [ ] **Geospatial features** (lat/long, distances) ← Biggest impact
+- [ ] **Geospatial features** (lat/long, addresses) ← Biggest impact
 - [ ] External data integration (school ratings, crime stats)
 - [ ] Property condition metrics
 - [ ] Market dynamics (time on market, seasonality)
