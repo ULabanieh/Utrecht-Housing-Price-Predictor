@@ -1,4 +1,4 @@
 .cla_env
 .gitignore
-utrecht_4digit_postcodes
-code_walkthrough
+docs/code_walkthrough.md
+docs/utrecht_4digit_postcodes.txt
