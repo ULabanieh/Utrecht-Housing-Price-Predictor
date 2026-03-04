@@ -1,4 +1,4 @@
 .cla_env
 .gitignore
-/home/usama-labanieh/Downloads/CLA Notebooks/Final Project/docs/code_walkthrough.md
-/home/usama-labanieh/Downloads/CLA Notebooks/Final Project/docs/utrecht_4digit_postcodes.txt
+docs/code_walkthrough.md
+docs/utrecht_4digit_postcodes.txt
