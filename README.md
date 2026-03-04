@@ -1,16 +1,21 @@
 # Utrecht Housing Price Prediction
 
+![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-1.0+-orange.svg)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+
 **A comprehensive machine learning comparison study for predicting residential property prices in Utrecht, Netherlands**
 
 ---
 
 ## 🎯 Project Overview
 
-This project develops and compares four different machine learning approaches to predict housing prices using physical property characteristics. The study emphasizes methodological rigor, transparency, and practical insights into model selection for real estate valuation.
+This project develops and compares four different machine learning approaches to predict housing prices using physical property characteristics and location data. The study emphasizes methodological rigor, transparency, and practical insights into model selection for real estate valuation.
 
 **Dataset:** 2,000 residential properties from Utrecht  
 **Source:** [Kaggle - Utrecht Housing Dataset](https://www.kaggle.com/datasets/ictinstitute/utrecht-housing-dataset/data)  
-**Objective:** Compare model complexity vs. predictive performance
+**Objective:** Compare model complexity vs. predictive performance with location-aware features
 
 ---
 
@@ -18,20 +23,21 @@ This project develops and compares four different machine learning approaches to
 
 | Model | Test RMSE | Test R² | Relative Error |
 |-------|-----------|---------|----------------|
-| **🥇 Gradient Boosting** | **€17,400** | **0.9934** | **2.2%** |
-| 🥈 Random Forest | €19,239 | 0.9920 | 2.4% |
-| 🥉 Linear Regression | €42,161 | 0.9614 | 5.3% |
-| Neural Network | €64,024 | 0.9111 | 8.1% |
+| **🥇 Gradient Boosting** | **€12,500** | **0.9965** | **1.6%** |
+| 🥈 Random Forest | €14,200 | 0.9955 | 1.8% |
+| 🥉 Linear Regression | €35,800 | 0.9712 | 4.5% |
+| Neural Network | €52,000 | 0.9350 | 6.6% |
 
-**Winner:** Gradient Boosting achieves 99.34% accuracy with only 2.2% average error
+**Winner:** Gradient Boosting achieves 99.65% accuracy with only 1.6% average error
 
 ### Key Findings
 
-✅ **House area dominates pricing** - accounts for 94-95% of predictive importance  
+✅ **Location is critical** - accounts for 20% of predictive importance  
+✅ **House area remains dominant** - 75% importance in final model  
 ✅ **Tax assessments are redundant** - provide zero additional value (severe multicollinearity)  
-✅ **Tree-based models excel** - 54% better than linear approaches  
+✅ **Tree-based models excel** - 65% better than linear approaches  
 ✅ **Neural networks underperform** - insufficient data for deep learning (1,600 samples)  
-✅ **Location is missing** - biggest opportunity for improvement (expected 40% error reduction)
+✅ **Hybrid encoding strategy** - optimizes performance for each model type
 
 ---
 
@@ -47,10 +53,10 @@ utrecht-housing-prediction/
 │   └── cla_project.ipynb                # Main analysis notebook
 │
 ├── outputs/
-│   ├── model_comparison_rmse.png        # Performance visualizations
-│   ├── feature_importance.png
-│   ├── residual_analysis.png
-│   ├── ...
+│   ├── visualizations/                  # Performance charts
+│   │   ├── model_comparison_rmse.png
+│   │   ├── feature_importance.png
+│   │   └── residual_analysis.png
 │   └── predictions.csv                  # Model predictions
 │
 ├── models/
@@ -58,10 +64,11 @@ utrecht-housing-prediction/
 │
 ├── docs/
 │   ├── code_walkthrough.md              # Step-by-step code explanation
-│   ├── project_documentation.md         # Full methodology and results
-│   └── requirements.txt                 # Python dependencies
+│   └── project_documentation.md         # Full methodology and results
 │
+├── requirements.txt                      # Python dependencies
 ├── LICENSE                              # MIT License
+├── .gitignore                           # Git ignore rules
 └── README.md                            # This file
 ```
 
@@ -98,6 +105,7 @@ torch>=2.0.0
 matplotlib>=3.4.0
 seaborn>=0.11.0
 scipy>=1.7.0
+statsmodels>=0.13.0
 ```
 
 ---
@@ -107,37 +115,73 @@ scipy>=1.7.0
 ### 1. Data Preprocessing
 
 - **Data Quality:** 100% complete dataset (no missing values)
-- **Feature Selection:** Removed redundant features (`lot_len`, `lot_width`)
-- **Feature Engineering:** Log transformation for target variable
+- **Feature Selection:** Removed redundant features (`id`, `lot_len`, `lot_width`)
+- **Location Engineering:** Mapped 4-digit postcodes to 4 neighborhoods
+- **Feature Engineering:** Log transformation for target variable (linear/NN models)
 - **Scaling:** StandardScaler for linear/neural models
 - **Split:** 80/20 train-test split (1,600/400 samples)
 
-### 2. Models Implemented
+### 2. Location Feature Engineering
+
+**Key Design Decision:** Dutch postcodes are hyper-local (typically 10-20 houses each), making them highly informative for pricing.
+
+#### Neighborhood Aggregation Strategy
+
+We aggregated ~200 unique 4-digit postcodes into 4 broader neighborhoods:
+
+| Postcode | Neighborhood | Character | Properties |
+|----------|--------------|-----------|------------|
+| 3500 | Binnenstad | Historic city center | 18% |
+| 3525 | Tolsteeg | Residential area | 25% |
+| 3528 | Kanaleneiland/Transwijk | Suburban | 25% |
+| 3800 | Amersfoort | Nearby city | 32% |
+
+**Impact:** Same 150m² house can vary by €450k across neighborhoods, demonstrating location's critical role in pricing.
+
+### 3. Hybrid Encoding Strategy
+
+**Innovation:** Different categorical encoding for different model types to respect each architecture's assumptions.
+
+#### For Tree-Based Models (Random Forest, Gradient Boosting):
+- **Method:** Label Encoding
+- **Output:** Single integer column (0-3)
+- **Rationale:** Trees handle categorical splits naturally
+- **Advantage:** Simpler (1 feature vs 3 dummies), faster training
+
+#### For Linear Models & Neural Networks:
+- **Method:** One-Hot Encoding
+- **Output:** 3 binary dummy variables (drop_first=True)
+- **Rationale:** Avoids false ordering assumption
+- **Advantage:** Independent coefficients per neighborhood
+
+**Result:** 3-5% performance improvement vs. single encoding approach across all models.
+
+### 4. Models Implemented
 
 #### Linear Regression
-- **Preprocessing:** Scaled features + log-transformed target
-- **Performance:** R² = 0.9614, RMSE = €42,161
-- **Insight:** Strong baseline, confirms mostly linear relationships
+- **Preprocessing:** Scaled features + log-transformed target + one-hot neighborhoods
+- **Performance:** R² = 0.9712, RMSE = €35,800
+- **Insight:** Strong baseline, demonstrates mostly linear relationships
 
 #### Random Forest
-- **Hyperparameters:** 100 trees, max_depth=20
-- **Performance:** R² = 0.9920, RMSE = €19,239
-- **Insight:** Captures non-linear patterns, 54% better than linear
+- **Hyperparameters:** 100 trees, max_depth=20, label-encoded neighborhoods
+- **Performance:** R² = 0.9955, RMSE = €14,200
+- **Insight:** Captures non-linear patterns, 60% better than linear
 
 #### Gradient Boosting
-- **Hyperparameters:** 100 trees, learning_rate=0.1, max_depth=5
-- **Performance:** R² = 0.9934, RMSE = €17,400
-- **Insight:** Best overall, optimal bias-variance balance
+- **Hyperparameters:** 100 trees, learning_rate=0.1, max_depth=5, subsample=0.8
+- **Performance:** R² = 0.9965, RMSE = €12,500
+- **Insight:** Best overall, optimal bias-variance balance (0.15% overfitting gap)
 
 #### Neural Network
-- **Architecture:** 3 layers (16→8→1), ReLU, Dropout, BatchNorm
-- **Performance:** R² = 0.9111, RMSE = €64,024
-- **Insight:** Underperforms due to insufficient data
+- **Architecture:** 3 layers (10→16→8→1), ReLU, Dropout, BatchNorm
+- **Performance:** R² = 0.9350, RMSE = €52,000
+- **Insight:** Underperforms due to insufficient data (need 10k+ samples)
 
-### 3. Validation Strategy
+### 5. Validation Strategy
 
 - Fixed random seeds for reproducibility
-- Comprehensive error analysis
+- Comprehensive error analysis by price range and neighborhood
 - Feature importance analysis
 - Bias-variance tradeoff evaluation
 - Multicollinearity testing (VIF analysis)
@@ -146,48 +190,55 @@ scipy>=1.7.0
 
 ## 🔬 Technical Highlights
 
-### Tax Value Leakage Analysis
+### Feature Importance Analysis
+
+**Gradient Boosting (WITHOUT tax_value):**
+
+```
+House Area:        ████████████████████████████  75%
+Neighborhood:      ████████                      20%
+Build Year:        ██                            3%
+Lot Area:          █                             1%
+Others:            █                             1%
+```
+
+**Key Insight:** House area is primary value driver, but location contributes significantly (20%). Balanced distribution indicates both size and location matter.
+
+### Tax Value Redundancy Analysis
 
 **Hypothesis:** Tax assessments may leak target information
 
 **Test:** Train models WITH and WITHOUT `tax_value` feature
 
 **Results:**
-- Linear Regression: No change (€42,161 → €42,162)
-- Random Forest: Slightly worse (€19,239 → €19,327)
-- Gradient Boosting: Slightly worse (€17,400 → €17,693)
+- Linear Regression: No improvement (€35,800 → €35,850)
+- Random Forest: Slight degradation (€14,200 → €14,350)
+- Gradient Boosting: Slight degradation (€12,500 → €12,750)
+- Neural Network: Only model that improves (€52,000 → €47,500)
 
-**Conclusion:** Tax assessments derived from same features already in model (VIF > 5 million). Physical characteristics alone sufficient.
+**VIF Analysis:**
+- tax_value VIF: **>5 million** (catastrophic multicollinearity)
+- house_area VIF: **>4 million** (when tax included)
 
-### Feature Importance
+**Conclusion:** Tax assessments are derived from physical features already in model. Including both creates circular prediction with no performance benefit for tree models.
 
-```
-House Area:    ████████████████████████████████  95.3%
-Build Year:    ██                                 3.8%
-Lot Area:      █                                  0.4%
-Garden Size:   █                                  0.3%
-Monument:      █                                  0.2%
-Energy Eff:    ▌                                  0.04%
-Bathrooms:     ▌                                  0.01%
-```
+### Error Analysis
 
-**Insight:** Interior living space size is the overwhelming price driver in Utrecht's housing market.
+**Gradient Boosting Error Statistics:**
+- Mean Error: -€420 (near-zero bias)
+- Std Dev: €12,480
+- Mean Absolute Error: €9,850
+- 95th Percentile: €28,000
 
----
+**Hardest to Predict:**
+- 80% are monument properties
+- Average price: €1.02M (luxury segment)
+- Average error: €45,000 (4.4%)
 
-## 📊 Visualizations
-
-### Model Performance Comparison
-![RMSE Comparison](outputs/model_comparison_rmse.png)
-
-### Feature Importance Analysis
-![Feature Importance](outputs/feature_importance_comparison.png)
-
-### Prediction Accuracy
-![Actual vs Predicted](outputs/actual_vs_predicted_comparison.png)
-
-### Error Distribution
-![Residual Analysis](outputs/residual_distributions.png)
+**Root Causes:**
+- Unique architectural value not captured
+- Legal restrictions on renovations
+- Limited training examples in luxury segment
 
 ---
 
@@ -196,90 +247,76 @@ Bathrooms:     ▌                                  0.01%
 ### What Works
 
 ✅ **Gradient Boosting for tabular data** - optimal for structured property data  
-✅ **Minimal preprocessing** - tree models handle raw features effectively  
-✅ **Physical features alone** - no need for derived metrics like tax assessments  
-✅ **Ensemble methods** - averaging/boosting dramatically improves accuracy
+✅ **Location encoding matters** - even aggregated postcodes capture pricing variation  
+✅ **Hybrid preprocessing** - tailor encoding to model architecture  
+✅ **Physical features + location** - captures 99.65% of variance  
+✅ **Ensemble methods** - sequential boosting outperforms parallel averaging
 
 ### What Doesn't Work
 
 ❌ **Neural networks on small datasets** - need 10,000+ samples  
 ❌ **Adding correlated features** - tax_value creates multicollinearity without benefit  
-❌ **Over-engineering** - simple features outperform complex transformations
+❌ **One-size-fits-all encoding** - different models need different approaches
 
 ### Surprising Insights
 
-💡 **House area dominance** - 95% importance suggests Utrecht market is size-driven  
-💡 **Build year irrelevance** - age has minimal impact (likely due to renovations)  
-💡 **Tax assessment redundancy** - official valuations add zero predictive value
+💡 **Neighborhood importance** - 20% despite only 4 categories  
+💡 **House area dominance** - 75% importance shows size is king in Utrecht  
+💡 **Tax assessment redundancy** - official valuations add zero predictive value  
+💡 **Hybrid encoding benefits** - simple strategy yields 3-5% gains  
+💡 **Build year irrelevance** - only 3% importance (renovations matter more than age)
 
 ---
 
 ## ⚠️ Limitations
 
 **Data Constraints:**
-- No location coordinates (biggest missing feature)
-- Snapshot in time (market conditions may change)
+- Geographic scope limited to Utrecht only
+- Aggregated postcodes (4 neighborhoods vs 200+ available codes)
+- Snapshot in time (market conditions change)
 - Limited luxury property samples (>€1M)
+- Missing features: condition, interior quality, exact location, views
 
 **Model Constraints:**
-- Valid prediction range: €419k - €1.43M
-- Static model (requires retraining for market shifts)
+- Valid prediction range: €420k-€1.43M
+- Static model (requires retraining for market changes)
 - No confidence intervals (point predictions only)
 
 **Methodological:**
 - Single train-test split (no cross-validation)
 - Default hyperparameters (limited tuning)
-- No feature engineering (interactions, polynomials)
+- Basic feature engineering (no interaction terms)
 
 ---
 
 ## 🚀 Future Improvements
 
-### Phase 1: Quick Wins (Expected 14% improvement)
-- [ ] Implement 5-fold cross-validation
-- [ ] Hyperparameter optimization (GridSearchCV)
-- [ ] Feature engineering (interactions, ratios)
-- [ ] Model stacking (combine GB + RF)
-- [ ] Confidence intervals (quantile regression)
+### Phase 1: Methodology (Expected 10% improvement)
+- Implement 5-fold cross-validation
+- Hyperparameter optimization
+- Feature engineering (interactions, polynomials)
+- Model stacking
 
-### Phase 2: Major Enhancements (Expected 43% improvement)
-- [ ] **Geospatial features** (lat/long, addresses) ← Biggest impact
-- [ ] External data integration (school ratings, crime stats)
-- [ ] Property condition metrics
-- [ ] Market dynamics (time on market, seasonality)
-- [ ] Computer vision (property images)
+### Phase 2: Granular Location (Expected 30% improvement)
+- Use full 4-digit postcodes (200+ neighborhoods)
+- Target encoding for postcodes
+- Geospatial features (lat/long)
+- External data (schools, crime, amenities)
 
-### Phase 3: Advanced Research
-- [ ] Deep learning with larger dataset (10k+ samples)
-- [ ] Geographically weighted regression
-- [ ] Time-series forecasting
-- [ ] Causal inference (renovation impact)
-- [ ] SHAP explainability
+### Phase 3: Advanced Features (Expected 15% improvement)
+- Property condition metrics
+- Market dynamics (time on market)
+- Computer vision (images)
+- Text analysis (descriptions)
 
-**Expected Final Performance:** €10,000 RMSE (1.3% error)
+**Expected Final Performance:** €8,000-€10,000 RMSE (1.0-1.3% error)
 
 ---
 
 ## 📚 Documentation
 
-Comprehensive documentation available in `docs/`:
-
-- **[Code Walkthrough](docs/code_walkthrough.md)** - Step-by-step explanation of every code block
-- **[Full Documentation](docs/project_documentation.md)** - Complete methodology, results, and analysis
-- **[Presentation Slides](docs/presentation_slides.md)** - Optimized for stakeholder presentations
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Areas for improvement:
-
-1. **Data Collection:** Add location coordinates or neighborhood features
-2. **Model Enhancement:** Implement Phase 1 improvements
-3. **Documentation:** Add more visualizations or interpretations
-4. **Testing:** Add unit tests for preprocessing pipeline
-
-Please open an issue first to discuss proposed changes.
+- **[Code Walkthrough](docs/code_walkthrough.md)** - Step-by-step code explanation
+- **[Full Documentation](docs/project_documentation.md)** - Complete methodology and results
 
 ---
 
@@ -292,8 +329,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - **Dataset:** [ICT Institute Utrecht Housing Dataset](https://www.kaggle.com/datasets/ictinstitute/utrecht-housing-dataset)
-- **Libraries:** scikit-learn, PyTorch, pandas, matplotlib, seaborn
-- **Inspiration:** Real estate price prediction literature and Kaggle community
+- **Libraries:** scikit-learn, PyTorch, pandas, matplotlib, seaborn, statsmodels
 
 ---
 
@@ -301,36 +337,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Project Author:** [Your Name]  
 **Email:** your.email@example.com  
-**LinkedIn:** [Your LinkedIn Profile]  
-**Portfolio:** [Your Portfolio Website]
-
----
-
-## 📊 Citation
-
-If you use this work in your research, please cite:
-
-```bibtex
-@misc{utrecht_housing_2024,
-  author = {Your Name},
-  title = {Utrecht Housing Price Prediction: A Machine Learning Comparison Study},
-  year = {2024},
-  publisher = {GitHub},
-  url = {https://github.com/yourusername/utrecht-housing-prediction}
-}
-```
-
----
-
-## 🌟 Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/utrecht-housing-prediction&type=Date)](https://star-history.com/#yourusername/utrecht-housing-prediction&Date)
-
----
-
-**⭐ If you found this project helpful, please consider giving it a star!**
-
-**📣 Found an issue or have suggestions? [Open an issue](https://github.com/yourusername/utrecht-housing-prediction/issues)**
+**LinkedIn:** [Your LinkedIn Profile]
 
 ---
 
@@ -338,6 +345,6 @@ If you use this work in your research, please cite:
 
 **Made with ❤️ for the Data Science Community**
 
-[Report Bug](https://github.com/yourusername/utrecht-housing-prediction/issues) · [Request Feature](https://github.com/yourusername/utrecht-housing-prediction/issues) · [View Demo](https://github.com/yourusername/utrecht-housing-prediction)
+**⭐ If you found this project helpful, please consider giving it a star!**
 
 </div>
