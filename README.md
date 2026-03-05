@@ -9,8 +9,7 @@
 This project develops and compares four different machine learning approaches to predict housing prices using physical property characteristics and location data. The study emphasizes methodological rigor, transparency, and practical insights into model selection for real estate valuation.
 
 **Dataset:** 2,000 residential properties from Utrecht  
-**Source:** [Kaggle - Utrecht Housing Dataset](https://www.kaggle.com/datasets/ictinstitute/utrecht-housing-dataset/data?select=utrechthousinghuge.csv)
-
+**Source:** [Kaggle - Utrecht Housing Dataset](https://www.kaggle.com/datasets/ictinstitute/utrecht-housing-dataset/data?select=utrechthousinghuge.csv) 
 **Objective:** Compare model complexity vs. predictive performance with location-aware features
 
 ---
