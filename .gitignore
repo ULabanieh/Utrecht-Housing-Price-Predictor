@@ -1,1 +1,5 @@
-
+.cla_env
+.gitignore
+docs/utrecht_4digit_postcodes.txt
+docs/code_walkthrough.md
+docs/24 Hour Project Mastery.md
