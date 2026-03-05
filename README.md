@@ -27,8 +27,8 @@ This project develops and compares four different machine learning approaches to
 
 ### Key Findings
 
+✅ **House area dominant** - 75% importance in final model  
 ✅ **Location is critical** - accounts for 20% of predictive importance  
-✅ **House area remains dominant** - 75% importance in final model  
 ✅ **Tax assessments are redundant** - provide zero additional value (severe multicollinearity)  
 ✅ **Tree-based models excel** - 65% better than linear approaches  
 ✅ **Neural networks underperform** - insufficient data for deep learning (1,600 samples)  
